@@ -1,41 +1,18 @@
-
 pipeline {
-    agent {                     // 声明使用的节点
-        label 'master'
-    }
-    environment {               // 定义环境变量
-        GIT_REPO = 'https://github.com/xx'
-    }
-    options {
-        timestamps()
-        timeout(time: 10, unit: 'MINUTES')
+    agent any
+    parameters {
+        booleanParam(name: 'A', defaultValue: true, description: '')   // 布尔参数
+        choice(name: 'E', choices: ['A', 'B', 'C'], description: '')   // 单选参数，输入时会显示成下拉框
+        string(name: 'B', defaultValue: 'Hello', description: '')      // 字符串参数，在 Web 页面上输入时不能换行
+        text(name: 'C', defaultValue: 'Hello\nWorld', description: '') // 文本参数，输入时可以换行
+        password(name: 'D', defaultValue: '123456', description: '')   // 密文参数，输入时会显示成密文
+        file(name: 'f1', description: '')                              // 文件参数，输入时会显示文件上传按钮
     }
     stages {
-        stage('拉取代码') {      // 开始一个阶段
-            environment {       // 定义该阶段的环境变量
-                BRANCH = 'master'
-            }
-            steps {             // 该阶段需要执行一些步骤
-                sh """
-                    git clone $GIT_REPO
-                    git checkout $BRANCH"
-                """
-            }
-        }
-        stage('构建镜像') {
+        stage('Test') {
             steps {
-                sh '''
-                    IMAGE=${image_hub}/${image_project}/${image_name}:${image_tag}
-                    docker build . -t $IMAGE
-                    docker push $IMAGE
-                    docker image rm $IMAGE
-                '''
+                echo "$A"   // 也可通过 $params.A 的格式读取构建参数，避免与环境变量重名
             }
-        }
-    }
-    post {
-        always {            // 任务结束时总是执行以下操作
-            deleteDir()     // 递归地删除当前目录。这里是作用于当前 agent 的 ${env.WORKSPACE} 目录
         }
     }
 }
